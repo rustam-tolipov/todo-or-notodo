@@ -19,8 +19,19 @@ async function createTask(req, res) {
 
 // Or maybe just want to see what chaos you've already created?
 async function getAllTasks(req, res) {
+  const { user_id } = req.query;
   try {
-    const result = await req.db.query('SELECT * FROM tasks ORDER BY id ASC');
+    let result;
+
+    if (user_id) {
+      result = await req.db.query(
+        'SELECT * FROM tasks Where user_id = $1 ORDER BY id ASC',
+        [user_id]
+      );
+    } else {
+      result = await req.db.query('SELECT * FROM tasks ORDER BY id ASC');
+    }
+
     res.json(result.rows);
   } catch (err) {
     res.status(500).json({ error: 'Could not retrieve tasks', details: err });
