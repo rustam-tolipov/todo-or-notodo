@@ -66,8 +66,29 @@ async function toggleTaskComplete(req, res) {
   }
 }
 
+// Remove a task from your life. It's gone. Forever. (but speficy what you are deleting)
+async function deleteTask(req, res) {
+  const taskId = req.params.id;
+
+  try {
+    const result = await req.db.query(
+      'DELETE FROM tasks WHERE id = $1 RETURNING *',
+      [taskId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    res.json({ message: 'Task deleted', task: result.rows[0] });
+  } catch (err) {
+    res.status(500).json({ error: 'Could not delete task', details: err });
+  }
+}
+
 module.exports = {
   createTask,
   getAllTasks,
   toggleTaskComplete,
+  deleteTask,
 };
