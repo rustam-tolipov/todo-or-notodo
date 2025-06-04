@@ -38,7 +38,36 @@ async function getAllTasks(req, res) {
   }
 }
 
+// Flip the completed status of a task
+async function toggleTaskComplete(req, res) {
+  const taskId = req.params.id;
+
+  try {
+    const { rows } = await req.db.query(
+      'SELECT completed FROM tasks WHERE id = $1',
+      [taskId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    const currentStatus = rows[0].completed;
+    const newStatus = !currentStatus;
+
+    const update = await req.db.query(
+      'UPDATE tasks SET completed = $1 WHERE id = $2 RETURNING *',
+      [newStatus, taskId]
+    );
+
+    res.json(update.rows[0]);
+  } catch (err) {
+    res.status(500).json({ error: 'Could not toggle task', details: err });
+  }
+}
+
 module.exports = {
   createTask,
   getAllTasks,
+  toggleTaskComplete,
 };
